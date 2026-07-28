@@ -49,7 +49,7 @@ export default async function Company360({ params }: { params: Promise<{ id: str
     db.from("orders").select("id,number,status,total,created_at,customer_name").eq("customer_id", id).order("created_at", { ascending: false }).limit(200),
     db.from("crm_interactions").select("id,channel,message,created_at,seller_id").eq("customer_id", id).order("created_at", { ascending: false }).limit(100),
     db.from("crm_followups").select("id,title,notes,channel,status,due_at,completed_at,created_at").eq("customer_id", id).order("due_at", { ascending: false }).limit(100),
-    db.from("customer_visits").select("id,status,started_at,finished_at,outcome,notes,next_action,next_contact_at,start_latitude,start_longitude").eq("customer_id", id).order("started_at", { ascending: false }).limit(100),
+    db.from("customer_visits").select("id,status,started_at,finished_at,outcome,notes,next_action,next_contact_at,start_latitude,start_longitude,outcome_code,order_id,proposal_id").eq("customer_id", id).order("started_at", { ascending: false }).limit(100),
     db.from("customer_photos").select("id,caption,created_at,storage_path,file_name").eq("customer_id", id).order("created_at", { ascending: false }).limit(60),
   ]);
   if (!customer) notFound();

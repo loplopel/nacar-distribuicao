@@ -14,6 +14,9 @@ const startSchema = z.object({
   outcome: z.string().max(500).optional().nullable(),
   next_action: z.string().max(1000).optional().nullable(),
   next_contact_at: z.string().datetime().optional().nullable(),
+  gps_error_code: z.string().max(80).optional().nullable(),
+  without_gps_reason: z.string().max(80).optional().nullable(),
+  without_gps_details: z.string().max(500).optional().nullable(),
 });
 
 async function allowedCustomer(customerId: string, profile: any) {
@@ -57,6 +60,9 @@ export async function POST(request: Request) {
         start_latitude: parsed.latitude ?? null,
         start_longitude: parsed.longitude ?? null,
         accuracy_meters: parsed.accuracy ?? null,
+        start_gps_error_code: parsed.gps_error_code || null,
+        start_without_gps_reason: parsed.without_gps_reason || null,
+        start_without_gps_details: parsed.without_gps_details?.trim() || null,
         notes: parsed.notes?.trim() || null,
         status: "em_andamento",
         updated_at: now,

@@ -18,6 +18,7 @@ import {
   BriefcaseBusiness,
   FileSignature,
   BrainCircuit,
+  MapPinned,
 } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 import SidebarLink from './SidebarLink';
@@ -68,6 +69,7 @@ export default async function AppShell({children}:{children:React.ReactNode}){
           <SidebarLink href="/admin/pedidos" icon={<ClipboardList size={19}/>}>Todos os pedidos</SidebarLink>
           <SidebarLink href="/admin/metas" icon={<BriefcaseBusiness size={19}/>}>Metas</SidebarLink>
           <SidebarLink href="/admin/gerencial" icon={<LineChart size={19}/>}>Gerencial</SidebarLink>
+          <SidebarLink href="/admin/visitas" icon={<MapPinned size={19}/>}>Visitas e GPS</SidebarLink>
           <SidebarLink href="/admin/whatsapp" icon={<MessageCircle size={19}/>}>WhatsApp</SidebarLink>
 
           <div className="nav-section-title">SISTEMA</div>

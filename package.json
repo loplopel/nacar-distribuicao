@@ -1,6 +1,6 @@
 {
-  "name": "nacar-distribuicao-v3-2-pedido-inteligente",
-  "version": "3.2.0",
+  "name": "nacar-distribuicao-v3-3-1-validacao-gps",
+  "version": "3.3.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
