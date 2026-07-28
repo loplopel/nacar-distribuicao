@@ -16,6 +16,8 @@ import {
   Target,
   Users,
   BriefcaseBusiness,
+  FileSignature,
+  BrainCircuit,
 } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 import SidebarLink from './SidebarLink';
@@ -51,7 +53,8 @@ export default async function AppShell({children}:{children:React.ReactNode}){
         <div className="nav-section-title">COMERCIAL</div>
         <SidebarLink href="/catalogo" icon={<ShoppingBag size={19}/>}>Catálogo</SidebarLink>
         <SidebarLink href="/pedidos" icon={<ClipboardList size={19}/>}>Meus pedidos</SidebarLink>
-        {p?.role!=='cliente'&&<SidebarLink href="/crm" icon={<Target size={19}/>}>CRM Comercial</SidebarLink>}
+        <SidebarLink href="/propostas" icon={<FileSignature size={19}/>}>Propostas</SidebarLink>
+        {p?.role!=='cliente'&&<><SidebarLink href="/crm" icon={<Target size={19}/>}>CRM Comercial</SidebarLink><SidebarLink href="/inteligencia" icon={<BrainCircuit size={19}/>}>Inteligência</SidebarLink></>}
         {p?.role==='vendedor'&&<SidebarLink href="/clientes" icon={<Users size={19}/>}>Meus clientes</SidebarLink>}
 
         {p?.role==='admin'&&<>

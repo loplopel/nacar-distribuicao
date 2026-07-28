@@ -7,4 +7,3 @@ node_modules
 *.log
 .DS_Store
 tsconfig.tsbuildinfo
-.env.production

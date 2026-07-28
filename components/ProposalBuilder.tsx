@@ -1,0 +1,24 @@
+'use client';
+import { useMemo,useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Search,Trash2 } from 'lucide-react';
+import type { Product } from '@/lib/types';
+type Customer={id:string;name:string;trade_name:string|null;payment_terms:string|null};
+type Item=Product&{quantity:number;unit_price:number;discount_percent:number};
+const money=(v:number)=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+export default function ProposalBuilder({products,customers,initialCustomer}:{products:Product[];customers:Customer[];initialCustomer?:string}){
+ const router=useRouter(); const [q,setQ]=useState(''); const [customer,setCustomer]=useState(initialCustomer||''); const [items,setItems]=useState<Item[]>([]); const [valid,setValid]=useState(''); const [payment,setPayment]=useState(''); const [delivery,setDelivery]=useState(''); const [notes,setNotes]=useState(''); const [busy,setBusy]=useState(false);
+ const shown=useMemo(()=>products.filter(p=>`${p.name} ${p.ean||''} ${p.brand||''}`.toLowerCase().includes(q.toLowerCase())).slice(0,30),[products,q]);
+ const subtotal=items.reduce((s,i)=>s+i.quantity*i.unit_price,0); const total=items.reduce((s,i)=>s+i.quantity*i.unit_price*(1-i.discount_percent/100),0);
+ function add(p:Product){setItems(cur=>cur.some(i=>i.id===p.id)?cur: [...cur,{...p,quantity:1,unit_price:Number(p.cost_price),discount_percent:0}]);}
+ function patch(id:string,v:Partial<Item>){setItems(cur=>cur.map(i=>i.id===id?{...i,...v}:i));}
+ async function save(status:'rascunho'|'enviada'){
+  if(!customer||!items.length){alert('Selecione a empresa e adicione produtos.');return;} setBusy(true);
+  const r=await fetch('/api/proposals',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({customer_id:customer,status,valid_until:valid||null,payment_terms:payment,delivery_terms:delivery,notes,items:items.map(i=>({product_id:i.id,quantity:i.quantity,unit_price:i.unit_price,discount_percent:i.discount_percent}))})}); const j=await r.json(); setBusy(false); if(!r.ok){alert(j.error||'Não foi possível salvar.');return;} router.push(`/propostas/${j.id}`);
+ }
+ return <>
+  <section className="card proposal-head-form"><div className="form-grid three"><label>Empresa<select value={customer} onChange={e=>{setCustomer(e.target.value); const c=customers.find(x=>x.id===e.target.value); if(c?.payment_terms)setPayment(c.payment_terms)}}><option value="">Selecione</option>{customers.map(c=><option key={c.id} value={c.id}>{c.trade_name||c.name}</option>)}</select></label><label>Validade<input type="date" value={valid} onChange={e=>setValid(e.target.value)}/></label><label>Condição de pagamento<input value={payment} onChange={e=>setPayment(e.target.value)}/></label><label className="full">Prazo/condição de entrega<input value={delivery} onChange={e=>setDelivery(e.target.value)} placeholder="Ex.: até 7 dias úteis após aprovação"/></label></div></section>
+  <section className="proposal-workspace"><div className="card proposal-products"><label className="search"><Search size={18}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar produto, EAN ou marca"/></label><div className="proposal-product-list">{shown.map(p=><button key={p.id} type="button" onClick={()=>add(p)}><span><b>{p.name}</b><small>{p.ean||'Sem EAN'} {p.size?`• Tam. ${p.size}`:''}</small></span><strong>{money(p.cost_price)}</strong></button>)}</div></div>
+  <div className="card proposal-cart"><h2>Itens da proposta</h2>{!items.length?<div className="empty">Adicione produtos ao lado.</div>:items.map(i=><article key={i.id}><div><b>{i.name}</b><small>{i.ean||'-'} {i.size?`• Tam. ${i.size}`:''}</small></div><label>Qtd.<input type="number" min="1" value={i.quantity} onChange={e=>patch(i.id,{quantity:Math.max(1,Number(e.target.value)||1)})}/></label><label>Valor unitário<input type="number" step="0.01" min="0" value={i.unit_price} onChange={e=>patch(i.id,{unit_price:Number(e.target.value)||0})}/></label><label>Desconto %<input type="number" step="0.01" min="0" max="100" value={i.discount_percent} onChange={e=>patch(i.id,{discount_percent:Math.min(100,Math.max(0,Number(e.target.value)||0))})}/></label><strong>{money(i.quantity*i.unit_price*(1-i.discount_percent/100))}</strong><button onClick={()=>setItems(cur=>cur.filter(x=>x.id!==i.id))}><Trash2 size={17}/></button></article>)}<label>Observações<textarea rows={4} value={notes} onChange={e=>setNotes(e.target.value)}/></label><div className="proposal-totals"><span>Subtotal <b>{money(subtotal)}</b></span><span>Descontos <b>{money(subtotal-total)}</b></span><strong>Total {money(total)}</strong></div><div className="button-row"><button className="btn" disabled={busy} onClick={()=>save('rascunho')}>Salvar rascunho</button><button className="btn btn-primary" disabled={busy} onClick={()=>save('enviada')}>Gerar proposta</button></div></div></section>
+ </>;
+}

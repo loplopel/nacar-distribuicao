@@ -1,6 +1,6 @@
 {
-  "name": "nacar-distribuicao-v2-9-4-final",
-  "version": "2.9.4",
+  "name": "nacar-distribuicao-v3-2-pedido-inteligente",
+  "version": "3.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
