@@ -1,0 +1,4 @@
+import{createClient}from'@supabase/supabase-js';
+const url=process.env.NEXT_PUBLIC_SUPABASE_URL!,key=process.env.SUPABASE_SERVICE_ROLE_KEY!,email=process.env.ADMIN_EMAIL||'rodrigo.franco@nacar.com.br',password=process.env.ADMIN_PASSWORD||'123456';
+if(!url||!key)throw new Error('Configure NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY');
+const s=createClient(url,key,{auth:{persistSession:false}});const{data,error}=await s.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{name:'Rodrigo Franco',role:'admin'}});if(error&&!error.message.toLowerCase().includes('already'))throw error;if(data.user)await s.from('profiles').update({role:'admin',name:'Rodrigo Franco',active:true}).eq('id',data.user.id);console.log('Admin configurado:',email,'- altere a senha após o primeiro acesso.');

@@ -1,0 +1,10 @@
+{
+  "framework": "nextjs",
+  "regions": ["gru1"],
+  "headers": [
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [{ "key": "Content-Type", "value": "application/manifest+json" }]
+    }
+  ]
+}
