@@ -19,6 +19,7 @@ import {
   FileSignature,
   BrainCircuit,
   MapPinned,
+  Route,
 } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 import SidebarLink from './SidebarLink';
@@ -56,7 +57,7 @@ export default async function AppShell({children}:{children:React.ReactNode}){
         <SidebarLink href="/pedidos" icon={<ClipboardList size={19}/>}>Meus pedidos</SidebarLink>
         <SidebarLink href="/propostas" icon={<FileSignature size={19}/>}>Propostas</SidebarLink>
         {p?.role!=='cliente'&&<><SidebarLink href="/crm" icon={<Target size={19}/>}>CRM Comercial</SidebarLink><SidebarLink href="/inteligencia" icon={<BrainCircuit size={19}/>}>Inteligência</SidebarLink></>}
-        {p?.role==='vendedor'&&<SidebarLink href="/clientes" icon={<Users size={19}/>}>Meus clientes</SidebarLink>}
+        {p?.role==='vendedor'&&<><SidebarLink href="/rota" icon={<Route size={19}/>}>Minha rota</SidebarLink><SidebarLink href="/clientes" icon={<Users size={19}/>}>Meus clientes</SidebarLink></>}
 
         {p?.role==='admin'&&<>
           <div className="nav-section-title">CADASTROS</div>
@@ -70,6 +71,7 @@ export default async function AppShell({children}:{children:React.ReactNode}){
           <SidebarLink href="/admin/metas" icon={<BriefcaseBusiness size={19}/>}>Metas</SidebarLink>
           <SidebarLink href="/admin/gerencial" icon={<LineChart size={19}/>}>Gerencial</SidebarLink>
           <SidebarLink href="/admin/visitas" icon={<MapPinned size={19}/>}>Visitas e GPS</SidebarLink>
+          <SidebarLink href="/admin/mapa-comercial" icon={<Route size={19}/>}>Mapa comercial</SidebarLink>
           <SidebarLink href="/admin/whatsapp" icon={<MessageCircle size={19}/>}>WhatsApp</SidebarLink>
 
           <div className="nav-section-title">SISTEMA</div>

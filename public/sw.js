@@ -1,4 +1,4 @@
-const CACHE_NAME = "nacar-b2b-v3.3.1.1";
+const CACHE_NAME = "nacar-b2b-v3.4.1";
 const APP_SHELL = ["/login", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/grupo-nacar.png"];
 
 self.addEventListener("install", (event) => {

@@ -7,7 +7,7 @@ type Seller = { id: string; name: string };
 type Customer = {
   id: string; name: string; legal_name?: string | null; cnpj?: string | null; city?: string | null; state?: string | null;
   phone?: string | null; whatsapp?: string | null; email?: string | null; seller_id?: string | null; seller_name?: string | null;
-  payment_terms?: string | null; credit_limit?: number | null; region?: string | null; notes?: string | null; active: boolean;
+  payment_terms?: string | null; credit_limit?: number | null; region?: string | null; notes?: string | null; active: boolean; postal_code?:string|null;street?:string|null;street_number?:string|null;address_complement?:string|null;neighborhood?:string|null;latitude?:number|null;longitude?:number|null;visit_radius_meters?:number|null;
   users_count?: number; orders_count?: number;
 };
 
@@ -59,7 +59,7 @@ export default function CustomerManager({ customers, sellers }: { customers: Cus
 
   async function save(event: React.FormEvent) {
     event.preventDefault(); if (!draft) return;
-    const ok = await patch(draft.id, {name:draft.name,legal_name:draft.legal_name||null,cnpj:draft.cnpj||null,city:draft.city||null,state:draft.state||null,phone:draft.phone||null,whatsapp:draft.whatsapp||null,email:draft.email||null,seller_id:draft.seller_id||null,payment_terms:draft.payment_terms||null,credit_limit:Number(draft.credit_limit||0),region:draft.region||null,notes:draft.notes||null,active:draft.active}, false);
+    const ok = await patch(draft.id, {name:draft.name,legal_name:draft.legal_name||null,cnpj:draft.cnpj||null,city:draft.city||null,state:draft.state||null,phone:draft.phone||null,whatsapp:draft.whatsapp||null,email:draft.email||null,seller_id:draft.seller_id||null,payment_terms:draft.payment_terms||null,credit_limit:Number(draft.credit_limit||0),region:draft.region||null,notes:draft.notes||null,active:draft.active,postal_code:draft.postal_code||null,street:draft.street||null,street_number:draft.street_number||null,address_complement:draft.address_complement||null,neighborhood:draft.neighborhood||null,latitude:draft.latitude===null||draft.latitude===undefined?null:Number(draft.latitude),longitude:draft.longitude===null||draft.longitude===undefined?null:Number(draft.longitude),visit_radius_meters:Number(draft.visit_radius_meters||300)}, false);
     if (ok) { setDraft(null); setTimeout(() => location.reload(), 450); }
   }
 
@@ -107,8 +107,8 @@ export default function CustomerManager({ customers, sellers }: { customers: Cus
           <label>E-mail<input className="input" type="email" value={draft.email||''} onChange={e=>setDraft({...draft,email:e.target.value})}/></label>
           <label>Telefone<input className="input" value={draft.phone||''} onChange={e=>setDraft({...draft,phone:e.target.value})}/></label>
           <label>WhatsApp<input className="input" value={draft.whatsapp||''} onChange={e=>setDraft({...draft,whatsapp:e.target.value})}/></label>
-          <label>Cidade<input className="input" value={draft.city||''} onChange={e=>setDraft({...draft,city:e.target.value})}/></label>
-          <label>Estado<input className="input" maxLength={2} value={draft.state||''} onChange={e=>setDraft({...draft,state:e.target.value.toUpperCase()})}/></label>
+          <label>CEP<input className="input" value={draft.postal_code||''} onChange={e=>setDraft({...draft,postal_code:e.target.value})}/></label><label>Logradouro<input className="input" value={draft.street||''} onChange={e=>setDraft({...draft,street:e.target.value})}/></label><label>Número<input className="input" value={draft.street_number||''} onChange={e=>setDraft({...draft,street_number:e.target.value})}/></label><label>Complemento<input className="input" value={draft.address_complement||''} onChange={e=>setDraft({...draft,address_complement:e.target.value})}/></label><label>Bairro<input className="input" value={draft.neighborhood||''} onChange={e=>setDraft({...draft,neighborhood:e.target.value})}/></label><label>Cidade<input className="input" value={draft.city||''} onChange={e=>setDraft({...draft,city:e.target.value})}/></label>
+          <label>Estado<input className="input" maxLength={2} value={draft.state||''} onChange={e=>setDraft({...draft,state:e.target.value.toUpperCase()})}/></label><label>Latitude<input className="input" type="number" step="0.0000001" value={draft.latitude??''} onChange={e=>setDraft({...draft,latitude:e.target.value?Number(e.target.value):null})}/></label><label>Longitude<input className="input" type="number" step="0.0000001" value={draft.longitude??''} onChange={e=>setDraft({...draft,longitude:e.target.value?Number(e.target.value):null})}/></label><label>Raio permitido (m)<input className="input" type="number" min="50" value={draft.visit_radius_meters||300} onChange={e=>setDraft({...draft,visit_radius_meters:Number(e.target.value)})}/></label>
           <label>Região<input className="input" value={draft.region||''} onChange={e=>setDraft({...draft,region:e.target.value})}/></label>
           <label>Vendedor<select className="input" value={draft.seller_id||''} onChange={e=>setDraft({...draft,seller_id:e.target.value||null})}><option value="">Não vinculado</option>{sellers.map(seller=><option key={seller.id} value={seller.id}>{seller.name}</option>)}</select></label>
           <label>Condição de pagamento<input className="input" value={draft.payment_terms||''} onChange={e=>setDraft({...draft,payment_terms:e.target.value})}/></label>
