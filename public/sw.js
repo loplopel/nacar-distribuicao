@@ -1,4 +1,4 @@
-const VERSION = "3.5.0";
+const VERSION = "3.5.1";
 const CACHE_PREFIX = "nacar-b2b-";
 const STATIC_CACHE = `${CACHE_PREFIX}static-v${VERSION}`;
 const OFFLINE_URL = "/offline.html";

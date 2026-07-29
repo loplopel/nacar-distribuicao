@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 import SidebarLink from './SidebarLink';
+import MobileNavigation from './MobileNavigation';
 import { getCurrentProfile } from '@/lib/supabase-server';
 
 function roleLabel(role?: string) {
@@ -89,12 +90,12 @@ export default async function AppShell({children}:{children:React.ReactNode}){
     </aside>
 
     <main className="main admin-main">
-      <header className="mobile-top admin-mobile-top">
-        <Link className="mobile-brand" href="/">
-          <img src="/grupo-nacar.png" alt="Grupo Nacar" />
-          <span>Distribuição B2B</span>
-        </Link>
-      </header>
+      <MobileNavigation
+        role={p?.role}
+        name={p?.name}
+        initial={initial}
+        homeHref={p?.role==='admin'?'/dashboard':p?.role==='vendedor'?'/vendedor':'/catalogo'}
+      />
       <div className="container admin-container">{children}</div>
     </main>
   </div>
