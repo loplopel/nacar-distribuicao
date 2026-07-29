@@ -25,3 +25,6 @@ Esta versão utiliza o mesmo banco já atualizado até a v2.9.3.1. **Não há SQ
 ## Produção
 
 Consulte [PRODUCAO.md](./PRODUCAO.md) para GitHub, Vercel, variáveis, Supabase Auth, segurança e instalação PWA.
+
+## v3.6 — Base comercial real
+Consulte `README-v3.6.md` e `IMPLANTACAO-V3.6.md`. A implantação possui simulação, validação do Admin Rodrigo, backup automático e geração de credenciais temporárias.
