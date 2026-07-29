@@ -1,6 +1,6 @@
 {
-  "name": "nacar-distribuicao-v3-4-mapa-roteiro",
-  "version": "3.4.0",
+  "name": "nacar-distribuicao-v3-5-pwa-segura",
+  "version": "3.5.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
