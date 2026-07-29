@@ -347,17 +347,17 @@ export default async function Dashboard() {
         <div className="card recent-orders-card">
           <div className="dashboard-card-head"><div><h2>Pedidos recentes</h2><p>Últimas movimentações comerciais.</p></div><ShoppingCart size={20} /></div>
           <div className="table-wrap">
-            <table className="table dashboard-table">
+            <table className="table dashboard-table mobile-data-table recent-orders-mobile-table">
               <thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th><th></th></tr></thead>
               <tbody>
                 {orders.slice(0, 7).map((order) => (
                   <tr key={order.id}>
-                    <td><b>#{String(order.number).padStart(6, '0')}</b></td>
-                    <td>{order.customers?.trade_name || order.customers?.name || order.customer_name || '-'}</td>
-                    <td>{dateLabel(order.created_at)}</td>
-                    <td><span className={`badge status-${order.status}`}>{statusLabel(order.status)}</span></td>
-                    <td><b>{money(Number(order.total || 0))}</b></td>
-                    <td><Link className="table-link" href={`/pedidos/${order.id}`}>Abrir</Link></td>
+                    <td data-label="Pedido"><b>#{String(order.number).padStart(6, '0')}</b></td>
+                    <td data-label="Cliente">{order.customers?.trade_name || order.customers?.name || order.customer_name || '-'}</td>
+                    <td data-label="Data">{dateLabel(order.created_at)}</td>
+                    <td data-label="Status"><span className={`badge status-${order.status}`}>{statusLabel(order.status)}</span></td>
+                    <td data-label="Total"><b>{money(Number(order.total || 0))}</b></td>
+                    <td data-label="Ação"><Link className="table-link" href={`/pedidos/${order.id}`}>Abrir</Link></td>
                   </tr>
                 ))}
               </tbody>

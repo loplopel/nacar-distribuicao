@@ -240,3 +240,26 @@ html,body{max-width:100%;overflow-x:hidden}.shell,.main,.admin-main,.container,.
   .route-customer-actions{grid-template-columns:1fr}
   .visit-report-kpis{grid-template-columns:1fr!important}
 }
+
+/* v3.5.2 — correção de tabelas no celular */
+@media(max-width:760px){
+  .mobile-table-card{padding:12px!important;overflow:hidden}
+  .mobile-table-wrap{overflow:visible!important;border-radius:0!important}
+  .mobile-data-table{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;border-collapse:separate}
+  .mobile-data-table thead{display:none}
+  .mobile-data-table tbody{display:grid;gap:12px;width:100%}
+  .mobile-data-table tr{display:grid;width:100%;min-width:0;padding:14px;border:1px solid #e5e7eb;border-radius:13px;background:#fff;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+  .mobile-data-table td{display:grid!important;grid-template-columns:minmax(88px,34%) minmax(0,1fr);align-items:start;gap:10px;width:100%;min-width:0;padding:8px 0!important;border:0!important;font-size:13px!important;overflow-wrap:anywhere;word-break:break-word;white-space:normal!important}
+  .mobile-data-table td+td{border-top:1px solid #f0f1f3!important}
+  .mobile-data-table td::before{content:attr(data-label);font-size:10px;font-weight:900;letter-spacing:.45px;text-transform:uppercase;color:#7b8491;padding-top:2px}
+  .mobile-data-table td>*{min-width:0;max-width:100%}
+  .mobile-data-table .btn{width:100%;min-height:40px}
+  .mobile-data-table .table-link{display:inline-flex;min-height:38px;align-items:center;justify-content:center;padding:8px 12px;border-radius:9px;background:#fff3ed;color:#d94712;font-weight:850}
+  .recent-orders-card .table-wrap{overflow:visible!important}
+  .recent-orders-mobile-table tbody{gap:10px}
+  .recent-orders-mobile-table tr{padding:12px}
+  .proposals-mobile-table .status{justify-self:start;white-space:nowrap}
+}
+@media(max-width:420px){
+  .mobile-data-table td{grid-template-columns:80px minmax(0,1fr);gap:8px}
+}
