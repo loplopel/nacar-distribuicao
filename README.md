@@ -1,4 +1,4 @@
-# Nacar Distribuição B2B — v2.9.4 Final de Produção
+# Nacar Distribuição B2B — v3.7 — Pedidos Históricos
 
 Sistema B2B do Grupo Nacar para catálogo, pedidos, empresas, vendedores, CRM, metas, relatórios, WhatsApp, configurações e auditoria.
 
@@ -28,3 +28,8 @@ Consulte [PRODUCAO.md](./PRODUCAO.md) para GitHub, Vercel, variáveis, Supabase 
 
 ## v3.6 — Base comercial real
 Consulte `README-v3.6.md` e `IMPLANTACAO-V3.6.md`. A implantação possui simulação, validação do Admin Rodrigo, backup automático e geração de credenciais temporárias.
+
+
+## Versão atual
+
+Consulte `README-v3.7.md` e `IMPORTACAO-V3.7.md` para a importação segura do histórico real de última compra.

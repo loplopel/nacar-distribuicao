@@ -23,7 +23,7 @@ export default async function PedidoDetalhe({ params }: { params: Promise<{ id: 
     <div className="print-header"><strong>NACAR DISTRIBUIÇÃO</strong><span>Pedido Nº {String(order.number).padStart(6, '0')}</span></div>
     <div className="page-head order-page-head">
       <div><Link href="/pedidos" className="back-link no-print">← Voltar aos pedidos</Link><h1>Pedido #{String(order.number).padStart(6, '0')}</h1><p>Criado em {new Date(order.created_at).toLocaleString('pt-BR')}</p></div>
-      <div className="order-head-right"><span className={`badge status-${order.status}`}>{statusLabel(order.status)}</span><OrderActions id={order.id} status={order.status}/></div>
+      <div className="order-head-right"><div className="order-badges"><span className={`badge status-${order.status}`}>{statusLabel(order.status)}</span>{order.is_historical&&<span className="badge historical-badge">Pedido histórico</span>}</div>{!order.is_historical&&<OrderActions id={order.id} status={order.status}/>}</div>
     </div>
 
     <div className="order-detail-grid">
@@ -35,7 +35,7 @@ export default async function PedidoDetalhe({ params }: { params: Promise<{ id: 
           <div><dt>Cidade/UF</dt><dd>{[order.customer_city || order.customers?.city, order.customer_state || order.customers?.state].filter(Boolean).join('/') || '-'}</dd></div>
           <div><dt>Vendedor</dt><dd>{order.profiles?.name || '-'}</dd></div>
           <div><dt>Condição de pagamento</dt><dd>{order.payment_terms || order.customers?.payment_terms || '-'}</dd></div>
-          <div><dt>Tipo</dt><dd>{order.status === 'orcamento' ? 'Solicitação de orçamento' : order.duplicated_from ? 'Pedido duplicado' : 'Pedido'}</dd></div>
+          <div><dt>Tipo</dt><dd>{order.is_historical ? 'Pedido histórico importado' : order.status === 'orcamento' ? 'Solicitação de orçamento' : order.duplicated_from ? 'Pedido duplicado' : 'Pedido'}</dd></div>{order.import_source&&<div><dt>Origem</dt><dd>{order.import_source}</dd></div>}
         </dl>
         {order.notes && <div className="order-notes"><b>Observações</b><p>{order.notes}</p></div>}
       </section>

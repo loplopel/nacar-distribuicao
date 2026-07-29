@@ -30,6 +30,7 @@ type OrderRow = {
   customer_name: string | null;
   customers?: { name?: string | null; trade_name?: string | null } | null;
   seller?: { name?: string | null } | null;
+  is_historical?: boolean;
 };
 
 type CustomerRow = {
@@ -52,6 +53,7 @@ type ItemRow = {
 };
 
 const validStatuses = new Set(['novo', 'em_analise', 'aprovado', 'faturado']);
+const purchaseHistoryStatuses = new Set(['novo', 'em_analise', 'aprovado', 'separacao', 'faturado', 'enviado', 'finalizado']);
 const openStatuses = new Set(['novo', 'em_analise']);
 
 function money(value: number) {
@@ -90,7 +92,7 @@ export default async function Dashboard() {
 
   let ordersQuery = scopedClient
     .from('orders')
-    .select('id,number,total,status,created_at,customer_id,seller_id,customer_name,customers(name,trade_name),seller:profiles!orders_seller_id_fkey(name)')
+    .select('id,number,total,status,created_at,customer_id,seller_id,customer_name,is_historical,customers(name,trade_name),seller:profiles!orders_seller_id_fkey(name)')
     .order('created_at', { ascending: false });
 
   let customersQuery = scopedClient
@@ -126,18 +128,22 @@ export default async function Dashboard() {
   const sellers = (profilesResult.data || []) as { id: string; name: string }[];
   const products = productsResult.data || [];
 
-  const validOrders = orders.filter((order) => validStatuses.has(order.status));
+  const operationalOrders = orders.filter((order) => !order.is_historical);
+  const historicalOrders = orders.filter((order) => order.is_historical);
+  const validOrders = operationalOrders.filter((order) => validStatuses.has(order.status));
+  const historicalRevenue = historicalOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const historicalCustomers = new Set(historicalOrders.map((order) => order.customer_id).filter(Boolean)).size;
   const monthOrders = validOrders.filter((order) => sameOrAfter(order.created_at, monthStart));
   const todayOrders = validOrders.filter((order) => sameOrAfter(order.created_at, dayStart));
   const monthRevenue = monthOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
   const todayRevenue = todayOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
   const ticket = monthOrders.length ? monthRevenue / monthOrders.length : 0;
-  const openOrders = orders.filter((order) => openStatuses.has(order.status));
+  const openOrders = operationalOrders.filter((order) => openStatuses.has(order.status));
   const activeProducts = products.length;
   const outOfStock = products.filter((product: any) => Number(product.stock) <= 0).length;
 
   const lastOrderByCustomer = new Map<string, OrderRow>();
-  for (const order of validOrders) {
+  for (const order of orders.filter((order) => purchaseHistoryStatuses.has(order.status))) {
     if (!order.customer_id || lastOrderByCustomer.has(order.customer_id)) continue;
     lastOrderByCustomer.set(order.customer_id, order);
   }
@@ -231,19 +237,19 @@ export default async function Dashboard() {
       <section className="dashboard-kpis">
         <div className="dash-kpi accent-orange">
           <div className="dash-kpi-icon"><WalletCards size={22} /></div>
-          <span>Vendas no mês</span>
+          <span>Vendas operacionais no mês</span>
           <strong>{money(monthRevenue)}</strong>
-          <small>{monthOrders.length} pedidos válidos</small>
+          <small>{monthOrders.length} pedidos criados pelo sistema</small>
         </div>
         <div className="dash-kpi accent-green">
           <div className="dash-kpi-icon"><TrendingUp size={22} /></div>
-          <span>Vendas hoje</span>
+          <span>Vendas operacionais hoje</span>
           <strong>{money(todayRevenue)}</strong>
           <small>{todayOrders.length} pedidos hoje</small>
         </div>
         <div className="dash-kpi accent-blue">
           <div className="dash-kpi-icon"><ReceiptText size={22} /></div>
-          <span>Ticket médio</span>
+          <span>Ticket médio operacional</span>
           <strong>{money(ticket)}</strong>
           <small>média por pedido no mês</small>
         </div>
@@ -255,10 +261,22 @@ export default async function Dashboard() {
         </div>
       </section>
 
+      <section className="card historical-summary-card">
+        <div>
+          <span className="eyebrow">BASE HISTÓRICA IMPORTADA</span>
+          <h2>{historicalOrders.length} pedidos históricos</h2>
+          <p>Última compra disponível de {historicalCustomers} clientes, separada da operação criada no aplicativo.</p>
+        </div>
+        <div className="historical-summary-values">
+          <div><span>Faturamento histórico</span><strong>{money(historicalRevenue)}</strong></div>
+          <Link href="/pedidos" className="dashboard-link">Consultar histórico <ArrowRight size={15} /></Link>
+        </div>
+      </section>
+
       <section className="dashboard-main-grid">
         <div className="card dashboard-chart-card">
           <div className="dashboard-card-head">
-            <div><h2>Evolução das vendas</h2><p>Últimos seis meses, sem pedidos cancelados.</p></div>
+            <div><h2>Evolução das vendas operacionais</h2><p>Pedidos criados pelo aplicativo nos últimos seis meses.</p></div>
             <span className="mini-pill"><TrendingUp size={14} /> {money(monthRevenue)}</span>
           </div>
           <div className="bar-chart" aria-label="Vendas dos últimos seis meses">
@@ -282,15 +300,17 @@ export default async function Dashboard() {
               ['aprovado', 'Aprovados'],
               ['faturado', 'Faturados'],
               ['cancelado', 'Cancelados'],
+              ['finalizado', 'Finalizados operacionais'],
             ].map(([status, label]) => {
-              const count = orders.filter((order) => order.status === status).length;
-              const percentage = orders.length ? Math.round((count / orders.length) * 100) : 0;
+              const count = operationalOrders.filter((order) => order.status === status).length;
+              const percentage = operationalOrders.length ? Math.round((count / operationalOrders.length) * 100) : 0;
               return <div key={status} className="status-progress-row">
                 <div><span className={`status-dot status-dot-${status}`} /><b>{label}</b><small>{percentage}%</small></div>
                 <strong>{count}</strong>
               </div>;
             })}
           </div>
+          <div className="status-progress-row historical-status-row"><div><span className="status-dot status-dot-finalizado" /><b>Históricos importados</b><small>fora da operação</small></div><strong>{historicalOrders.length}</strong></div>
           <Link href={profile.role === 'admin' ? '/admin/pedidos' : '/pedidos'} className="dashboard-link">Ver todos os pedidos <ArrowRight size={15} /></Link>
         </div>
       </section>
@@ -350,7 +370,7 @@ export default async function Dashboard() {
             <table className="table dashboard-table mobile-data-table recent-orders-mobile-table">
               <thead><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th><th></th></tr></thead>
               <tbody>
-                {orders.slice(0, 7).map((order) => (
+                {operationalOrders.slice(0, 7).map((order) => (
                   <tr key={order.id}>
                     <td data-label="Pedido"><b>#{String(order.number).padStart(6, '0')}</b></td>
                     <td data-label="Cliente">{order.customers?.trade_name || order.customers?.name || order.customer_name || '-'}</td>
@@ -362,7 +382,7 @@ export default async function Dashboard() {
                 ))}
               </tbody>
             </table>
-            {!orders.length && <div className="dashboard-empty">Nenhum pedido registrado.</div>}
+            {!operationalOrders.length && <div className="dashboard-empty">Nenhum pedido operacional registrado.</div>}
           </div>
         </div>
 

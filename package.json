@@ -1,6 +1,6 @@
 {
-  "name": "nacar-distribuicao-v3-6-base-real",
-  "version": "3.6.0",
+  "name": "nacar-distribuicao-v3-7-1-dashboards-operacao-historico",
+  "version": "3.7.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,7 +10,8 @@
     "import:products": "tsx --env-file=.env.local scripts/import-products.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run build",
-    "implant:real": "tsx --env-file=.env.local scripts/implant-real-base-v36.ts"
+    "implant:real": "tsx --env-file=.env.local scripts/implant-real-base-v36.ts",
+    "import:history": "tsx --env-file=.env.local scripts/import-historical-orders-v37.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
@@ -25,7 +26,6 @@
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.3",
     "@types/react-dom": "^19.0.2",
-    "supabase": "^2.110.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

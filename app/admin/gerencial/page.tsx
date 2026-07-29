@@ -23,7 +23,7 @@ function normalize(value?: string | null) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase();
 }
 
-export default async function GerencialPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
+export default async function GerencialPage({ searchParams }: { searchParams: Promise<{ month?: string; view?: string }> }) {
   const profile = await getCurrentProfile();
   if (profile?.role !== 'admin') redirect('/catalogo');
 
@@ -32,12 +32,13 @@ export default async function GerencialPage({ searchParams }: { searchParams: Pr
   const monthValue = params.month && /^\d{4}-\d{2}$/.test(params.month)
     ? params.month
     : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const view = ['operacao', 'historico', 'consolidado'].includes(params.view || '') ? String(params.view) : 'consolidado';
   const { start, end } = monthBounds(monthValue);
   const db = adminClient();
 
   const [ordersQ, itemsQ, sellersQ, customersQ, goalsQ, productGoalsQ, productsQ, followupsQ] = await Promise.all([
-    db.from('orders').select('id,number,total,status,created_at,customer_id,seller_id,customer_name,customers(name,trade_name),seller:profiles!orders_seller_id_fkey(name)').gte('created_at', start.toISOString()).lt('created_at', end.toISOString()).order('created_at', { ascending: false }),
-    db.from('order_items').select('quantity,unit_price,product_id,products(name,brand,category),orders!inner(status,created_at,seller_id)').gte('orders.created_at', start.toISOString()).lt('orders.created_at', end.toISOString()),
+    db.from('orders').select('id,number,total,status,created_at,customer_id,seller_id,customer_name,is_historical,customers(name,trade_name),seller:profiles!orders_seller_id_fkey(name)').gte('created_at', start.toISOString()).lt('created_at', end.toISOString()).order('created_at', { ascending: false }),
+    db.from('order_items').select('quantity,unit_price,product_id,products(name,brand,category),orders!inner(status,created_at,seller_id,is_historical)').gte('orders.created_at', start.toISOString()).lt('orders.created_at', end.toISOString()),
     db.from('profiles').select('id,name,active').eq('role', 'vendedor').order('name'),
     db.from('customers').select('id,name,trade_name,seller_id,active,created_at').eq('active', true),
     db.from('seller_goals').select('*').eq('month', `${monthValue}-01`),
@@ -55,10 +56,14 @@ export default async function GerencialPage({ searchParams }: { searchParams: Pr
   const products = (productsQ.data || []) as any[];
   const followups = (followupsQ.data || []) as any[];
 
-  const validOrders = orders.filter((order) => validStatuses.has(order.status));
+  const visibleOrders = orders.filter((order) => view === 'operacao' ? !order.is_historical : view === 'historico' ? order.is_historical : true);
+  const visibleItems = items.filter((item) => view === 'operacao' ? !item.orders?.is_historical : view === 'historico' ? item.orders?.is_historical : true);
+  const historicalOrders = orders.filter((order) => order.is_historical);
+  const operationalOrders = orders.filter((order) => !order.is_historical);
+  const validOrders = visibleOrders.filter((order) => validStatuses.has(order.status));
   const revenue = validOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
   const ticket = validOrders.length ? revenue / validOrders.length : 0;
-  const openOrders = orders.filter((order) => openStatuses.has(order.status));
+  const openOrders = visibleOrders.filter((order) => openStatuses.has(order.status));
   const activeCustomers = customers.length;
   const activeSellers = sellers.filter((seller) => seller.active).length;
   const outOfStock = products.filter((product) => Number(product.stock || 0) <= 0).length;
@@ -93,7 +98,7 @@ export default async function GerencialPage({ searchParams }: { searchParams: Pr
   const sellerRanking = [...sellerMap.values()].sort((a, b) => b.revenue - a.revenue);
 
   const productGoalProgress = productGoals.map((goal) => {
-    const quantity = items.reduce((sum, item) => {
+    const quantity = visibleItems.reduce((sum, item) => {
       if (!item.orders || item.orders.seller_id !== goal.seller_id || !validStatuses.has(item.orders.status)) return sum;
       const product = item.products || {};
       if (goal.brand && normalize(product.brand) !== normalize(goal.brand)) return sum;
@@ -116,7 +121,7 @@ export default async function GerencialPage({ searchParams }: { searchParams: Pr
   const topCustomers = [...customerStats.values()].sort((a, b) => b.total - a.total).slice(0, 8);
 
   const productStats = new Map<string, { name: string; brand: string; quantity: number; total: number }>();
-  items.forEach((item) => {
+  visibleItems.forEach((item) => {
     if (!item.orders || !validStatuses.has(item.orders.status)) return;
     const current = productStats.get(item.product_id) || { name: item.products?.name || 'Produto', brand: item.products?.brand || '-', quantity: 0, total: 0 };
     current.quantity += Number(item.quantity || 0);
@@ -125,7 +130,7 @@ export default async function GerencialPage({ searchParams }: { searchParams: Pr
   });
   const topProducts = [...productStats.values()].sort((a, b) => b.quantity - a.quantity).slice(0, 8);
 
-  const statusCounts = orders.reduce((map, order) => {
+  const statusCounts = visibleOrders.reduce((map, order) => {
     map.set(order.status, (map.get(order.status) || 0) + 1);
     return map;
   }, new Map<string, number>());
@@ -139,17 +144,27 @@ export default async function GerencialPage({ searchParams }: { searchParams: Pr
       <div>
         <span className="eyebrow">GESTÃO COMERCIAL</span>
         <h1>Dashboard Gerencial</h1>
-        <p>Visão consolidada da operação, metas, vendedores, clientes e produtos.</p>
+        <p>Compare a operação atual, a base histórica importada ou consulte os dados consolidados.</p>
       </div>
       <form className="management-month">
-        <label>Mês de referência<input type="month" name="month" defaultValue={monthValue}/></label>
+        <input type="hidden" name="view" value={view}/><label>Mês de referência<input type="month" name="month" defaultValue={monthValue}/></label>
         <button className="btn" type="submit"><CalendarDays size={17}/> Atualizar</button>
       </form>
     </div>
 
+    <section className="management-view-switch card">
+      <div><b>Visualização dos indicadores</b><span>{view === 'operacao' ? 'Somente pedidos criados no aplicativo.' : view === 'historico' ? 'Somente pedidos históricos importados.' : 'Operação atual e histórico importado.'}</span></div>
+      <div className="management-view-actions">
+        <Link className={view === 'operacao' ? 'active' : ''} href={`/admin/gerencial?month=${monthValue}&view=operacao`}>Operação atual</Link>
+        <Link className={view === 'historico' ? 'active' : ''} href={`/admin/gerencial?month=${monthValue}&view=historico`}>Histórico importado</Link>
+        <Link className={view === 'consolidado' ? 'active' : ''} href={`/admin/gerencial?month=${monthValue}&view=consolidado`}>Consolidado</Link>
+      </div>
+      <small>No mês selecionado: {operationalOrders.length} pedidos operacionais e {historicalOrders.length} históricos.</small>
+    </section>
+
     <section className="dashboard-kpis management-kpis">
-      <div className="dash-kpi accent-orange"><div className="dash-kpi-icon"><TrendingUp size={22}/></div><span>Faturamento</span><strong>{brl(revenue)}</strong><small>{pct(goalProgress)} da meta de {brl(totalRevenueGoal)}</small></div>
-      <div className="dash-kpi accent-blue"><div className="dash-kpi-icon"><ReceiptText size={22}/></div><span>Pedidos válidos</span><strong>{validOrders.length}</strong><small>{totalOrdersGoal ? `${pct((validOrders.length / totalOrdersGoal) * 100)} da meta` : 'sem meta geral definida'}</small></div>
+      <div className="dash-kpi accent-orange"><div className="dash-kpi-icon"><TrendingUp size={22}/></div><span>{view === 'operacao' ? 'Faturamento operacional' : view === 'historico' ? 'Faturamento histórico' : 'Faturamento consolidado'}</span><strong>{brl(revenue)}</strong><small>{pct(goalProgress)} da meta de {brl(totalRevenueGoal)}</small></div>
+      <div className="dash-kpi accent-blue"><div className="dash-kpi-icon"><ReceiptText size={22}/></div><span>{view === 'operacao' ? 'Pedidos operacionais' : view === 'historico' ? 'Pedidos históricos' : 'Pedidos válidos'}</span><strong>{validOrders.length}</strong><small>{totalOrdersGoal ? `${pct((validOrders.length / totalOrdersGoal) * 100)} da meta` : 'sem meta geral definida'}</small></div>
       <div className="dash-kpi accent-green"><div className="dash-kpi-icon"><Users size={22}/></div><span>Clientes ativos</span><strong>{activeCustomers}</strong><small>{activeSellers} vendedores ativos</small></div>
       <div className="dash-kpi accent-red"><div className="dash-kpi-icon"><AlertTriangle size={22}/></div><span>Aguardando ação</span><strong>{openOrders.length + overdueFollowups}</strong><small>{openOrders.length} pedidos e {overdueFollowups} follow-ups</small></div>
     </section>
