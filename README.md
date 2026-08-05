@@ -1,35 +1,7 @@
-# Nacar Distribuição B2B — v3.7 — Pedidos Históricos
+# Nacar Distribuição — v3.7.2
 
-Sistema B2B do Grupo Nacar para catálogo, pedidos, empresas, vendedores, CRM, metas, relatórios, WhatsApp, configurações e auditoria.
+Sistema B2B para catálogo, carrinho, pedidos, propostas, CRM, inteligência comercial, visitas, GPS, mapa, roteiros e gestão gerencial.
 
-## Executar localmente
+Esta versão adiciona carrinho rápido sem abertura automática e solicitação de orçamento com PDF enviado por link ao WhatsApp do vendedor vinculado.
 
-```powershell
-npm install
-npm run dev
-```
-
-Abra `http://localhost:3000`.
-
-## Validar antes do deploy
-
-```powershell
-npm run typecheck
-npm run build
-```
-
-## Banco
-
-Esta versão utiliza o mesmo banco já atualizado até a v2.9.3.1. **Não há SQL novo obrigatório.**
-
-## Produção
-
-Consulte [PRODUCAO.md](./PRODUCAO.md) para GitHub, Vercel, variáveis, Supabase Auth, segurança e instalação PWA.
-
-## v3.6 — Base comercial real
-Consulte `README-v3.6.md` e `IMPLANTACAO-V3.6.md`. A implantação possui simulação, validação do Admin Rodrigo, backup automático e geração de credenciais temporárias.
-
-
-## Versão atual
-
-Consulte `README-v3.7.md` e `IMPORTACAO-V3.7.md` para a importação segura do histórico real de última compra.
+Consulte `README-v3.7.2.md` para os detalhes da atualização.

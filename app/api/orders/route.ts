@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, getCurrentProfile } from '@/lib/supabase-server';
 import { z } from 'zod';
+import { createOrderPdfToken } from '@/lib/order-pdf-token';
 
 const schema = z.object({
   order_id: z.string().uuid().nullable().optional(),
@@ -15,6 +16,31 @@ const schema = z.object({
 });
 
 type Parsed = z.infer<typeof schema>;
+
+function normalizeWhatsApp(value: string | null | undefined) {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.startsWith('55') ? digits : `55${digits}`;
+}
+
+async function quoteWhatsAppData(s: Awaited<ReturnType<typeof createClient>>, order: any, origin: string) {
+  if (order.status !== 'orcamento' || !order.seller_id) return {};
+  const { data: seller } = await s.from('profiles').select('name,phone,whatsapp').eq('id', order.seller_id).maybeSingle();
+  const phone = normalizeWhatsApp(seller?.whatsapp || seller?.phone);
+  if (!phone) return { whatsapp_warning: 'O orçamento foi salvo, mas o vendedor vinculado não possui WhatsApp cadastrado.' };
+  const token = createOrderPdfToken(order.id);
+  const pdfUrl = `${origin}/api/orders/${order.id}/pdf?token=${token}`;
+  const customer = order.customer_name || 'cliente';
+  const total = Number(order.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const message = [
+    `Olá, ${seller?.name || 'vendedor'}.`,
+    `Foi gerada uma solicitação de orçamento para ${customer}.`,
+    `Orçamento nº ${String(order.number).padStart(6, '0')} · Total estimado: ${total}.`,
+    `PDF do orçamento: ${pdfUrl}`,
+  ].join('\n\n');
+  return { pdf_url: pdfUrl, whatsapp_url: `https://wa.me/${phone}?text=${encodeURIComponent(message)}` };
+}
+
 
 async function prepareOrder(data: Parsed, profile: any, s: Awaited<ReturnType<typeof createClient>>) {
   const ids = data.items.map((item) => item.product_id);
@@ -102,7 +128,8 @@ export async function POST(req: Request) {
     if (itemError) { await s.from('orders').delete().eq('id', order.id); throw itemError; }
     const descriptions: Record<string, string> = { rascunho: 'Rascunho criado.', novo: 'Pedido enviado.', orcamento: 'Solicitação de orçamento enviada.' };
     await writeEvent(s, order.id, profile.id, prepared.status, descriptions[prepared.status]);
-    return NextResponse.json(order);
+    const extra = await quoteWhatsAppData(s, order, new URL(req.url).origin);
+    return NextResponse.json({ ...order, ...extra });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Não foi possível salvar o pedido.' }, { status: 400 });
   }
@@ -129,7 +156,9 @@ export async function PATCH(req: Request) {
     if (itemError) throw itemError;
     const descriptions: Record<string, string> = { rascunho: 'Rascunho atualizado.', novo: 'Rascunho enviado como pedido.', orcamento: 'Rascunho enviado para orçamento.' };
     await writeEvent(s, existing.id, profile.id, prepared.status, descriptions[prepared.status]);
-    return NextResponse.json({ ...existing, status: prepared.status });
+    const updatedOrder = { ...existing, ...prepared.orderData, status: prepared.status };
+    const extra = await quoteWhatsAppData(s, updatedOrder, new URL(req.url).origin);
+    return NextResponse.json({ ...updatedOrder, ...extra });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Não foi possível atualizar o rascunho.' }, { status: 400 });
   }

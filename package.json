@@ -1,6 +1,6 @@
 {
-  "name": "nacar-distribuicao-v3-7-1-dashboards-operacao-historico",
-  "version": "3.7.1",
+  "name": "nacar-distribuicao-v3-7-2-carrinho-whatsapp",
+  "version": "3.7.2",
   "private": true,
   "scripts": {
     "dev": "next dev",

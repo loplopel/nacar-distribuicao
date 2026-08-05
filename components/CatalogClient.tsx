@@ -29,6 +29,7 @@ export default function CatalogClient({ products, customers = [] }: { products: 
   const [draftId, setDraftId] = useState<string | null>(null);
   const [loading, setLoading] = useState<SaveAction | null>(null);
   const [productQty, setProductQty] = useState<Record<string, number>>({});
+  const [cartNotice, setCartNotice] = useState('');
 
   useEffect(() => {
     try {
@@ -73,7 +74,8 @@ export default function CatalogClient({ products, customers = [] }: { products: 
         : [...current, { ...product, quantity: amount, notes: '' }];
     });
     setProductQty((current) => ({ ...current, [product.id]: 1 }));
-    setOpen(true);
+    setCartNotice(`${product.name} adicionado ao carrinho.`);
+    window.setTimeout(() => setCartNotice(''), 2200);
   }
 
   function updateItem(id: string, patch: Partial<CartItem>) {
@@ -82,6 +84,7 @@ export default function CatalogClient({ products, customers = [] }: { products: 
 
   async function save(action: SaveAction) {
     if (customers.length && !customer) { alert('Selecione o cliente.'); return; }
+    const whatsappWindow = action === 'quote' ? window.open('', '_blank') : null;
     setLoading(action);
     const response = await fetch('/api/orders', {
       method: draftId ? 'PATCH' : 'POST',
@@ -96,10 +99,22 @@ export default function CatalogClient({ products, customers = [] }: { products: 
     });
     const result = await response.json();
     setLoading(null);
-    if (!response.ok) { alert(result.error || 'Não foi possível salvar o pedido.'); return; }
+    if (!response.ok) {
+      whatsappWindow?.close();
+      alert(result.error || 'Não foi possível salvar o pedido.');
+      return;
+    }
 
     const labels: Record<SaveAction, string> = { draft: 'Rascunho salvo', submit: 'Pedido enviado', quote: 'Orçamento solicitado' };
-    alert(`${labels[action]} com sucesso. Nº ${String(result.number).padStart(6, '0')}.`);
+    if (action === 'quote' && result.whatsapp_url) {
+      if (whatsappWindow) whatsappWindow.location.href = result.whatsapp_url;
+      else window.location.href = result.whatsapp_url;
+      alert(`${labels[action]} com sucesso. Nº ${String(result.number).padStart(6, '0')}. O WhatsApp do vendedor vinculado foi aberto com o PDF.`);
+    } else {
+      whatsappWindow?.close();
+      const suffix = action === 'quote' && result.whatsapp_warning ? `\n\n${result.whatsapp_warning}` : '';
+      alert(`${labels[action]} com sucesso. Nº ${String(result.number).padStart(6, '0')}.${suffix}`);
+    }
     setCart([]);
     setNotes('');
     setCustomer('');
@@ -113,6 +128,7 @@ export default function CatalogClient({ products, customers = [] }: { products: 
   const clear = () => { setBrand(''); setCategory(''); setSize(''); setStatus(''); setStockOnly(false); };
 
   return <>
+    {cartNotice && <div className="cart-toast" role="status">{cartNotice}</div>}
     <div className="catalog-toolbar">
       <label className="search"><Search size={19}/><input placeholder="Buscar por produto, EAN, marca ou categoria" value={q} onChange={(e) => setQ(e.target.value)}/></label>
       <button className="btn btn-outline filter-toggle" onClick={() => setFiltersOpen((value) => !value)}><SlidersHorizontal size={17}/> Filtros <ChevronDown size={16}/></button>

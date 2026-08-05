@@ -269,3 +269,27 @@ html,body{max-width:100%;overflow-x:hidden}.shell,.main,.admin-main,.container,.
 /* v3.7.1 — separação entre operação e histórico */
 .historical-summary-card{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:18px;padding:20px 22px;border-left:4px solid #6366f1;background:linear-gradient(135deg,#fff 0%,#f5f3ff 100%)}.historical-summary-card h2{margin:5px 0 4px}.historical-summary-card p{margin:0;color:#64748b}.historical-summary-values{display:flex;align-items:center;gap:26px}.historical-summary-values>div{display:grid;gap:4px;text-align:right}.historical-summary-values span{font-size:12px;color:#64748b}.historical-summary-values strong{font-size:22px}.historical-status-row{margin-top:8px;padding-top:12px;border-top:1px dashed #c7d2fe}.management-view-switch{margin:16px 0 18px;padding:16px 18px;display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:10px 20px;align-items:center}.management-view-switch>div:first-child{display:grid;gap:3px}.management-view-switch span,.management-view-switch>small{color:#64748b;font-size:13px}.management-view-switch>small{grid-column:1/-1}.management-view-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.management-view-actions a{padding:9px 13px;border:1px solid #d8dee8;border-radius:10px;color:#334155;font-weight:700;font-size:13px;background:#fff}.management-view-actions a.active{background:#f15a24;border-color:#f15a24;color:#fff}.status-dot-finalizado{background:#16a34a}
 @media(max-width:700px){.historical-summary-card{align-items:flex-start;flex-direction:column}.historical-summary-values{width:100%;align-items:flex-start;flex-direction:column;gap:10px}.historical-summary-values>div{text-align:left}.management-view-switch{grid-template-columns:1fr}.management-view-actions{justify-content:flex-start}.management-view-actions a{flex:1;text-align:center;min-width:120px}}
+
+/* v3.7.2 — confirmação discreta de item adicionado */
+.cart-toast {
+  position: fixed;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1200;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #111827;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, .22);
+  animation: cart-toast-in .2s ease-out;
+}
+@keyframes cart-toast-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@media (max-width: 720px) {
+  .cart-toast { top: 74px; font-size: 14px; text-align: center; }
+}
